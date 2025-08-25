@@ -12,8 +12,6 @@ A workflow for creating Side-by-Side (SBS) video passes with ReShade.
 
 ### Installation
 
-**Note:** You will need to configure your ReShade shaders manually by following the steps below. A pre-configured preset file is not provided.
-
 1.  **Download the files** from this repository.
 2.  **Copy the `reshade-shaders` folder** into your game's root directory where the game's `.exe` file is located. This will place the `.fx` files in `[Game Directory]/reshade-shaders/Shaders/SBS-WFX/`.
 3.  **Start your game** and open the ReShade overlay (usually the `Home` key).
@@ -27,7 +25,7 @@ A workflow for creating Side-by-Side (SBS) video passes with ReShade.
 The `VideoSplitter.bat` script has two modes:
 
 1.  **Watcher Mode (Recommended):**
-    -   Configure the `VIDEO_SOURCE_DIR` variable inside the script to point to your recordings folder.
+    -   Configure the script by editing the variables in the `CONFIGURATION` section.
     -   Simply double-click the `.bat` file to run it.
     -   It will continuously watch the folder for new videos and process them automatically. This is great for batch processing.
 
@@ -41,22 +39,36 @@ The `END_SideBySideOutput` shader has a few options in the ReShade UI:
 -   **Display Mode:** Changes how the two passes are compared (e.g., split screen, centered overlay).
 -   **Invert Depth:** A utility to flip the colors of the effect pass, which can be useful for depth maps.
 
-## ProcessVideos Codec Configuration
+## Configuring `VideoSplitter.bat`
+All configuration is done by editing the `VideoSplitter.bat` file in a text editor. The settings are clearly laid out in the `CONFIGURATION` section at the top of the file.
 
-The batch script is pre-configured for high-quality, professional video formats suitable for post-production. You can, however, change these settings by editing `VideoSplitter.bat`.
+### Core Paths
+*   `VIDEO_SOURCE_DIR`: The folder the script will monitor for new video files when in **Watcher Mode**.
+*   `OUTPUT_SUBFOLDER_NAME`: The name of the subfolder that will be created inside the source directory to store the processed video passes (e.g., `MyVideos/Passes/`).
+*   `PROCESSED_ORIGINALS_SUBFOLDER`: The name of the subfolder where original video files will be moved after successful processing.
 
-### Default Codecs
--   **World Pass (`_world.mov`):** `ProRes 422 HQ`
-    -   **Why:** Excellent quality, widely supported in video editing software, and visually lossless. Great for color grading.
--   **Other Pass (`_depth.mov`):** `QuickTime Animation (QTRLE)`
-    -   **Why:** Mathematically lossless. This is critical for data passes like depth or normal maps, where every single color value is important and must not be altered by compression.
+### Processing
+*   `WORLD_ON_RIGHT`: This is the most important setting. It **must match** the "World on Right" checkbox in the ReShade preset.
+    *   `true`: The world/beauty pass is on the right side of the recorded video.
+    *   `false`: The world/beauty pass is on the left side.
+*   `KEEP_ORIGINAL_CODEC`:
+    *   `true`: The script will not re-encode the video. The output files will have the same codec and container as the original. This is faster but may result in larger files.
+    *   `false`: The script will convert the videos to high-quality editing formats (ProRes for the world pass, QTRLE for the depth pass).
+*   `REMOVE_AUDIO`:
+    *   `true`: Audio will be stripped from all output files.
+    *   `false`: Audio from the original recording will be kept in the main world pass file.
 
-### How to Change Codecs
-1.  Open `VideoSplitter.bat` in a text editor.
-2.  Find the line that starts with `"%FFMPEG_EXE%" -i "%INPUT_FILE%" ...`.
-3.  The world pass codec is defined by `-c:v prores_ks -profile:v 3 ...`.
-4.  The other pass codec is defined by `-c:v qtrle`.
-5.  You can replace these with other FFmpeg-supported codecs. For a comprehensive list of available codecs and their options, refer to the [official FFmpeg documentation](https://ffmpeg.org/ffmpeg-codecs.html).
+### File Naming & Handling
+*   `OUTPUT_WORLD_SUFFIX`: The text added to the end of the world pass filename (e.g., `myvideo_world.mov`).
+*   `OUTPUT_DEPTH_SUFFIX`: The text added to the end of the depth pass filename (e.g., `myvideo_depth.mov`).
+*   `OUTPUT_EXTENSION`: The file extension used when `KEEP_ORIGINAL_CODEC` is `false` (default is `.mov`).
+*   `VIDEO_EXTENSIONS`: A space-separated list of file extensions that the script should look for in Watcher Mode (e.g., `.mp4 .mov .mkv`).
+*   `MOVE_ORIGINAL_ON_SUCCESS`:
+    *   `true`: The original video file will be moved to the `PROCESSED_ORIGINALS_SUBFOLDER` after it has been successfully split.
+    *   `false`: The original video file will be left in the source directory.
+
+### Watcher Mode
+*   `CHECK_INTERVAL_SECONDS`: How many seconds the script waits between scanning the `VIDEO_SOURCE_DIR` for new files.
 
 ## Troubleshooting
 -   **Shaders not appearing:** Ensure they are in the correct `reshade-shaders/Shaders` directory and that you have restarted your game.
@@ -65,4 +77,3 @@ The batch script is pre-configured for high-quality, professional video formats 
 
 ## Contributing
 Feel free to open an issue to report bugs or suggest features.
-
